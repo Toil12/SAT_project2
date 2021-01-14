@@ -55,7 +55,7 @@ int choose (HeadNode* LIST,int VARNUM) {
 
 HeadNode* CreateClause(int &VARNUM,string &filename) {
     //FileOpen
-    string HFilePath = R"(C:\Users\PC\CLionProjects\Workshop\)";
+    string HFilePath = R"(/home/femstld/C++/SAT_project2/)";
     string path = HFilePath + filename;
     ifstream fis(path);
     if(!fis){
@@ -290,7 +290,7 @@ void show(struct consequence *result,int VarNum) {
 
 int main() {
     int VARNUM;
-    string filename = "ais10.cnf";
+    string filename = "test/sat/count4_2.cnf";
     HeadNode* LIST = CreateClause(VARNUM,filename);
     consequence result[VARNUM];//记录最终的真假值
     clock_t StartTime,EndTime;
