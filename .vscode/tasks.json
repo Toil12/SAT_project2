@@ -3,16 +3,16 @@
 	"tasks": [
 		{
 			"type": "cppbuild",
-			"label": "C/C++: g++ build active file",
-			"command": "/bin/g++",
+			"label": "C/C++: g++.exe build active file",
+			"command": "G:/Workplace/c_library/mingw64/bin/g++.exe",
 			"args": [
 				"-g",
 				"${file}",
 				"-o",
-				"${fileDirname}/${fileBasenameNoExtension}"
+				"${fileDirname}\\${fileBasenameNoExtension}.exe"
 			],
 			"options": {
-				"cwd": "${workspaceFolder}"
+				"cwd": "G:/Workplace/c_library/mingw64/bin"
 			},
 			"problemMatcher": [
 				"$gcc"
@@ -21,7 +21,7 @@
 				"kind": "build",
 				"isDefault": true
 			},
-			"detail": "compiler: /bin/g++"
+			"detail": "compiler: G:/Workplace/c_library/mingw64/bin/g++.exe"
 		}
 	]
 }
