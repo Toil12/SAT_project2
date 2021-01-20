@@ -54,21 +54,36 @@ int choose (HeadNode* LIST,int VARNUM) {
 }
 
 HeadNode* CreateClause(int &VARNUM,string &filename) {
-    //FileOpen
-    string HFilePath = R"(/home/femstld/C++/SAT_project2/)";
-    string path = HFilePath + filename;
+    string path= filename;
     ifstream fis(path);
     if(!fis){
         cout<<"File can not open.";
         exit(1);
     }
     char ch;
-    char buf[100];
+    char buf[500];
     fis>>ch;
-    while (ch != 'p') {
-        fis.getline(buf,100);
+    //need deletion when finished
+    // if (path==R"(g:\Workplace\c_documents\SAT_project2\test\unsat\subset6.cnf)")
+    // {
+    //     while (ch != 'p') {
+    //         fis.getline(buf,500);
+    //         fis>>ch;
+    //         // cout<<ch<<endl;
+    //     }
+    // }
+    // else
+    // {
+    //     while (ch != 'p') {
+    //         fis.getline(buf,500);
+    //         fis>>ch;
+    //     }
+    // }
+     while (ch != 'p') {
+        fis.getline(buf,500);
         fis>>ch;
     }
+    cout<<"finish clauses creation"<<endl;
     string cnf;
     int VarNum,ClauseNum;
     fis>>cnf>>VarNum>>ClauseNum;
@@ -288,20 +303,4 @@ void show(struct consequence *result,int VarNum) {
     cout<<endl;
 }
 
-int main() {
-    int VARNUM;
-    string filename = "test/sat/count4_2.cnf";
-    HeadNode* LIST = CreateClause(VARNUM,filename);
-    consequence result[VARNUM];//记录最终的真假值
-    clock_t StartTime,EndTime;
-    cout<<"Result: \n";
-    StartTime = clock();
-    int value = DPLL(LIST,result,VARNUM);
-    EndTime = clock();
-    if(value)
-        cout<<"S "<<TRUE<<endl;
-    else
-        cout<<"S "<<NoAnwser<<endl;
-    show(result,VARNUM);//输出解
-    cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
-}
+
