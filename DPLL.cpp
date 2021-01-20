@@ -1,20 +1,20 @@
-
 #include <iostream>
 #include <fstream>
 #include <ctime>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 using namespace std;
 
 typedef struct DataNode {
-    int data = 0;
-    DataNode *next{};
+    int data = 0;  //记录该数据节点的值
+    DataNode *next{};  //指向下一个数据节点
 }DataNode;
 
 typedef struct HeadNode {
-    int Num = 0;
-    DataNode *right{};
-    HeadNode *down{};
+    int Num = 0;  //记录该行子句的数据个数
+    DataNode *right{}; //指向到子句第一个数据节点
+    HeadNode *down{}; //指向到下一行子句
 }HeadNode;
 
 
@@ -23,13 +23,28 @@ struct times{
     int count = 0;
     int Positive = 0;
     int Negative = 0;
+    int MOM_num = 0;
+    int JW = 0;
+    int Boehm = 0;
 };
 
 bool comp(const times &a,const times &b) {
     return a.count > b.count;
 }
 
-int choose (HeadNode* LIST,int VARNUM) {
+bool comp_MOM(const times &a,const times &b) {
+    return a.MOM_num > b.MOM_num;
+}
+
+bool comp_JW(const times &a,const times &b) {
+    return a.JW > b.JW;
+}
+
+bool comp_Boehm(const times &a,const times &b) {
+    return a.Boehm > b.Boehm;
+}
+
+int DLIS_choose (HeadNode* LIST,int VARNUM) {
     HeadNode* PHead = LIST;
     times record[VARNUM];
     for (; PHead != nullptr; PHead = PHead->down)//装入数组
@@ -37,8 +52,27 @@ int choose (HeadNode* LIST,int VARNUM) {
         DataNode* Pdata = PHead->right;
         for (; Pdata != nullptr; Pdata = Pdata->next)
         {
-            record[abs(Pdata->data)-1].data = abs(Pdata->data);
-            record[abs(Pdata->data)-1].count++;
+            record[abs(Pdata->data)-1].data = abs(Pdata->data); //记录每个数值
+            record[abs(Pdata->data)-1].count++; //记录每个数值出现的次数
+        }
+    }
+    //排序
+    sort(record,record+VARNUM,comp);//最高的在最前面
+    //选取变元
+    return record[0].data;  //选取出现次数最多的variable
+}
+
+
+int DLCS_choose (HeadNode* LIST,int VARNUM) {
+    HeadNode* PHead = LIST;
+    times record[VARNUM];
+    for (; PHead != nullptr; PHead = PHead->down)//装入数组
+    {
+        DataNode* Pdata = PHead->right;
+        for (; Pdata != nullptr; Pdata = Pdata->next)
+        {
+            record[abs(Pdata->data)-1].data = abs(Pdata->data); //记录每个数值
+            record[abs(Pdata->data)-1].count++; //记录每个数值出现的次数
             if(Pdata->data > 0) record[abs(Pdata->data)-1].Positive++;
             else record[abs(Pdata->data)-1].Negative++;
         }
@@ -46,41 +80,123 @@ int choose (HeadNode* LIST,int VARNUM) {
     //排序
     sort(record,record+VARNUM,comp);//最高的在最前面
     //选取变元
-    if(record->Positive > record->Negative) return record[0].data;
+    if(record->Positive > record->Negative) return record[0].data;  //选取出现次数最多的variable
     else return 0-record[0].data;
 }
 
+int smallest_clauses_size(HeadNode* LIST){
+     HeadNode* PHead = LIST;
+     int width;
+     width = PHead->Num;
+     for (; PHead != nullptr; PHead = PHead->down){
+        if (width > PHead->Num){
+          width = PHead->Num;
+        }
+     }
+     return width;
+}
+
+int MOM_choose (HeadNode* LIST,int VARNUM, int k) {
+    HeadNode* PHead = LIST;
+    times record[VARNUM];
+    int smallest_width;
+    smallest_width = smallest_clauses_size(LIST);
+    for (; PHead != nullptr; PHead = PHead->down)//装入数组
+    {   
+        if (PHead->Num == smallest_width ){
+          DataNode* Pdata = PHead->right;
+          for (; Pdata != nullptr; Pdata = Pdata->next)
+          {
+              record[abs(Pdata->data)-1].data = abs(Pdata->data); //记录每个数值
+              record[abs(Pdata->data)-1].count++; //记录每个数值出现的次数
+              if(Pdata->data > 0) record[abs(Pdata->data)-1].Positive++;
+              else record[abs(Pdata->data)-1].Negative++;
+          }
+        }      
+    }
+    for(int i=0; i<VARNUM; i++){
+      record[i].MOM_num =(record[i].Positive)+ (record[i].Negative)*pow(2,k)+record[i].Positive*record[i].Negative;
+    }
+    //排序
+    sort(record,record+VARNUM,comp_MOM);//最高的在最前面
+    //选取变元
+    return record[0].data;  //选取出现次数最多的variable
+}
+
+int Jeroslaw_Wang_choose (HeadNode* LIST,int VARNUM) {
+    HeadNode* PHead = LIST;
+    times record[VARNUM];
+    for (; PHead != nullptr; PHead = PHead->down)//装入数组
+    {
+        DataNode* Pdata = PHead->right;
+        for (; Pdata != nullptr; Pdata = Pdata->next)
+        {
+            record[abs(Pdata->data)-1].data = abs(Pdata->data); //记录每个数值
+        }
+    }
+    for(int i=0; i<VARNUM;i++){
+      for (; PHead != nullptr; PHead = PHead->down){   
+        DataNode* Pdata = PHead->right;
+        for (; Pdata != nullptr; Pdata = Pdata->next){
+            if (record[i].data == abs(Pdata->data)){
+              record[i].JW += pow(2,-(LIST->Num));
+              break;
+            }
+        }
+      }
+    }
+    //排序
+    sort(record,record+VARNUM,comp_JW);//最高的在最前面
+    //选取变元
+    return record[0].data;  //选取出现次数最多的variable
+}
+
+int Boehm_choose (HeadNode* LIST,int VARNUM, int Alpha, int Belta) {
+    HeadNode* PHead = LIST;
+    times record[VARNUM];
+    for (; PHead != nullptr; PHead = PHead->down)//装入数组
+    {
+        DataNode* Pdata = PHead->right;
+        for (; Pdata != nullptr; Pdata = Pdata->next)
+        {
+            record[abs(Pdata->data)-1].data = abs(Pdata->data); //记录每个数值
+            record[abs(Pdata->data)-1].count++; //记录每个数值出现的次数
+            if(Pdata->data > 0) record[abs(Pdata->data)-1].Positive++;
+            else record[abs(Pdata->data)-1].Negative++;
+        }
+    }
+    //排序
+     for(int i; i<VARNUM; i++){
+        if(record[i].Positive >= record[i].Negative){
+           record[i].Boehm = Alpha*record[i].Positive + Belta*record[i].Negative;
+          }
+        else {
+          record[i].Boehm = Alpha*record[i].Negative + Belta*record[i].Positive;
+          }
+    }
+    
+    sort(record,record+VARNUM,comp_Boehm);//最高的在最前面
+    //选取变元
+    return record[0].data;  //选取H最大的variable
+}
+
+
 HeadNode* CreateClause(int &VARNUM,string filename) {
-    string path= filename;
+    //FileOpen
+    // string HFilePath = R"(G:\Workplace\c_documents\SAT_project2\sat\)";
+    string path = filename;
     ifstream fis(path);
     if(!fis){
         cout<<"File can not open.";
         exit(1);
     }
     char ch;
-    char buf[500];
+    char buf[100];
     fis>>ch;
-    //need deletion when finished
-    // if (path==R"(g:\Workplace\c_documents\SAT_project2\test\unsat\subset6.cnf)")
-    // {
-    //     while (ch != 'p') {
-    //         fis.getline(buf,500);
-    //         fis>>ch;
-    //         // cout<<ch<<endl;
-    //     }
-    // }
-    // else
-    // {
-    //     while (ch != 'p') {
-    //         fis.getline(buf,500);
-    //         fis>>ch;
-    //     }
-    // }
     while (ch != 'p') {
-        fis.getline(buf,500);
+        fis.getline(buf,100);
         fis>>ch;
     }
-    cout<<"finish clauses creation"<<endl;
     string cnf;
     int VarNum,ClauseNum;
     fis>>cnf>>VarNum>>ClauseNum;
@@ -140,46 +256,43 @@ HeadNode* CreateClause(int &VARNUM,string filename) {
 
 
 
+
 #define TRUE 1
 #define FALSE 0
 #define NoAnwser -1
 typedef int status;
 struct consequence {
     int value = -1;//存真值 真时为true-1，假时为false-0
-    bool puretag=false;//when true,mean this is pure literal
 };
 
 
 status DPLL(HeadNode *LIST,consequence *result,int);
-HeadNode* IsSingleClause(HeadNode*,consequence*);
+HeadNode* IsSingleClause(HeadNode*);
 status IsEmptyClause(HeadNode*);
 HeadNode* ADDSingleClause(HeadNode*,int);
 HeadNode* Duplication(HeadNode*);
-HeadNode* PureLiteralElimination(HeadNode*, int,consequence*);
 void DeleteHeadNode(HeadNode*,HeadNode*&);
 void DeleteDataNode(int,HeadNode*&);
 void show(struct consequence *,int);
-int PureLiteralEliminationOneVar(HeadNode*,int);
 
 status DPLL(HeadNode *LIST,consequence *result,int VARNUM) {
     //单子句规则
-    PureLiteralElimination(LIST,VARNUM,result);
     HeadNode* Pfind = LIST;
-    HeadNode* SingleClause = IsSingleClause(Pfind,result);
+    HeadNode* SingleClause = IsSingleClause(Pfind); //判断Pfind里是否存在单子句。遍历头节点，若任意一行的Num存在为1的情况，即证明存在单子句，并返回单子句的指针
     while (SingleClause != nullptr) {
         SingleClause->right->data > 0 ? result[abs(SingleClause->right->data)-1].value = TRUE : result[abs(SingleClause->right->data)-1].value = FALSE;
         int temp = SingleClause->right->data;
         DeleteHeadNode(SingleClause,LIST);//删除单子句这一行
         DeleteDataNode(temp,LIST);//删除相等或相反数的节点
-        if(!LIST) return TRUE;
-        else if(IsEmptyClause(LIST)) return FALSE;
+        if(!LIST) return TRUE; //List为空，所以满足
+        else if(IsEmptyClause(LIST)) return FALSE; //存在空子句，所以不满足
         Pfind = LIST;
-        SingleClause = IsSingleClause(Pfind,result);;//回到头节点继续进行检测是否有单子句
+        SingleClause = IsSingleClause(Pfind);;//回到头节点继续进行检测是否有单子句
     }
     //分裂策略
-    int Var = choose(LIST,VARNUM);//选取变元
+    int Var = Jeroslaw_Wang_choose(LIST,VARNUM);//选取变元
     HeadNode* replica = Duplication(LIST);//存放LIST的副本replica
-    HeadNode *temp1 = ADDSingleClause(LIST,Var);//装载变元成为单子句
+    HeadNode *temp1 = ADDSingleClause(LIST,Var);//装载变元成为单子句，并将此单子句放在首位
     if(DPLL(temp1,result,VARNUM)) return TRUE;
     else {
         HeadNode *temp2 = ADDSingleClause(replica,-Var);
@@ -194,12 +307,12 @@ status IsEmptyClause(HeadNode* LIST) {
             return TRUE;
         PHead = PHead->down;
     }
-    return FALSE;
+    return FALSE; //没有空子句
 }
 
-HeadNode* IsSingleClause(HeadNode* Pfind,consequence* result) {
+HeadNode* IsSingleClause(HeadNode* Pfind) {
     while (Pfind != nullptr ) {
-        if((Pfind->Num == 1)&&(!result[Pfind->right->data].puretag))
+        if(Pfind->Num == 1)
             return Pfind;
         Pfind = Pfind->down;
     }
@@ -290,60 +403,6 @@ void DeleteHeadNode(HeadNode *Clause,HeadNode *&LIST) {
     }
 }
 
-int PureLiteralEliminationOneVar(HeadNode* LIST,int checkVar){
-    bool find_tag=false;
-    bool ptag=true;
-    //check from head
-    for(HeadNode* pHeadNode=LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down){
-        //if unit clause, break
-        if (pHeadNode->Num==1){
-            if((abs(pHeadNode->right->data)==checkVar)&&(!find_tag)) {checkVar=pHeadNode->right->data;continue;}
-            else{
-                if((abs(pHeadNode->right->data)==checkVar)&&(find_tag)&&(pHeadNode->right->data!=checkVar)) break;
-                else continue;
-            }
-        }    
-        else{
-            //in normal clause
-            for(DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next){
-                if(abs(rear->data)==checkVar){
-                    //first touch,assignment
-                     if(!find_tag){find_tag=true;checkVar=rear->data;continue;}
-                    //not first touch and with different sign, not pure literal
-                     else if (rear->data!=checkVar){ptag=false;break;}    
-                    }
-                else continue;                  
-                }
-            } 
-        if(ptag) continue;
-        else break;             
-        }
-    return ptag,checkVar;
-}
-
-HeadNode* PureLiteralElimination(HeadNode* LIST, int Varnumber,consequence *result){
-   for(int i=1;i<=Varnumber;i++){
-       int temp=i;
-       bool pure_tag=false;
-       pure_tag,temp =PureLiteralEliminationOneVar(LIST,temp);
-       if(!pure_tag) continue;
-       else{
-            for (HeadNode* pHeadNode = LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down)
-                for (DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next) {      
-                    for (DataNode* front = pHeadNode->right; front != nullptr; front= front->next)
-                        if(front->next == rear) {
-                            front->next = rear->next;
-                            pHeadNode->Num--;
-                        }
-                    }
-            }
-        temp > 0 ? result[abs(temp)-1].value = TRUE : result[abs(temp)-1].value = FALSE;
-        result[abs(temp)-1].puretag=true;
-    }
-    return LIST;
-}
-
-
 void show(struct consequence *result,int VarNum) {
     cout<<"V ";
     for(int i = 0; i < VarNum; i++) {
@@ -357,4 +416,20 @@ void show(struct consequence *result,int VarNum) {
     cout<<endl;
 }
 
-
+int main() {
+    int VARNUM;
+    string filename = R"(G:\Workplace\c_documents\SAT_project2\sat\aim-50-1_6-yes1-1.cnf)";
+    HeadNode* LIST = CreateClause(VARNUM,filename);
+    consequence result[VARNUM];//记录最终的真假值
+    clock_t StartTime,EndTime; //记录程序运行的时间
+    cout<<"Result: \n";
+    StartTime = clock();
+    int value = DPLL(LIST,result,VARNUM);
+    EndTime = clock();
+    if(value)
+        cout<<"S "<<TRUE<<endl;
+    else
+        cout<<"S "<<NoAnwser<<endl;
+    show(result,VARNUM);//输出解
+    cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+}
