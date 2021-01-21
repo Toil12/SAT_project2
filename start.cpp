@@ -4,7 +4,7 @@ using namespace std;
 
 
 int main(){
-    char* folder_name = (char*)R"(sat)";
+    char* folder_name = (char*)R"(test\sat)";
     // string folder_name=R"(test/sat)";
     int error=BenchmarkRun(folder_name);
     // BenchmarkRun(folder_name);

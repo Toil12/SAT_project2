@@ -49,6 +49,7 @@ DWORD WINAPI DoStuff2(LPVOID lpParameter)
         cout << file_name<<" is working"<< endl;
         HeadNode* LIST = CreateClause(VARNUM,file_name);
         consequence result[VARNUM];//记录最终的真假值
+        LIST=PureLiteralElimination(LIST,VARNUM,result);
         clock_t StartTime,EndTime;
         cout<<"Result: \n";
         StartTime = clock();
