@@ -23,11 +23,11 @@ vector<char*> getFilesList(const char * dir)
 	vector<char*> allPath;
 	char dirNew[200];
 	strcpy(dirNew, dir);
-	strcat(dirNew, "\\*.*");    // 在目录后面加上"\\*.*"进行第一次搜索
+	strcat(dirNew, "\\*.*");    // first search
 	intptr_t handle;
 	_finddata_t findData;
 	handle = _findfirst(dirNew, &findData);
-	if (handle == -1) {// 检查是否成功
+	if (handle == -1) {// check success
 		cout << "can not found the file ... " << endl;
 		return allPath;
 	}      
@@ -63,7 +63,7 @@ vector<char*> getFilesList(const char * dir)
 	return allPath;
 }
 
-void run(string folder_name)
+void file_run(string folder_name)
 {
     string project_path=getCwd();
     string data_folder_name=folder_name;

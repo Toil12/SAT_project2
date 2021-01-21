@@ -251,23 +251,9 @@ HeadNode* CreateClause(int &VARNUM,string path) {
         END = headRear;
         headRear = headRear->down;
     }
+    fis.close();
     END->down = nullptr;
-    /*
-    //output link lists
-    HeadNode* Phead = HEAD;
-    DataNode* front;
-    cout<<"CnfParser\n";
-    while(Phead != nullptr) {
-        front = Phead->right;
-        while(front != nullptr) {
-            cout<<front->data<<" ";
-            front = front->next;
-        }
-        cout<<endl;
-        Phead = Phead->down;
-    }
-     */
-    VARNUM = VarNum;
+    VARNUM = VarNum; 
     cout<<"clause creation finish"<<endl;
     return HEAD;
 }
@@ -281,13 +267,13 @@ HeadNode* CreateClause(int &VARNUM,string path) {
 #define NoAnwser -1
 typedef int status;
 struct consequence {
-    int value = -1;//存真值 真时为true-1，假时为false-0
+    int value = -1;//the value of variable
     bool puretag=false;//when true,mean this is pure literal
 };
 
 
 status DPLL(HeadNode *LIST,consequence *result,int);
-HeadNode* IsSingleClause(HeadNode*,consequence*);
+HeadNode* IsSingleClause(HeadNode*);
 status IsEmptyClause(HeadNode*);
 HeadNode* ADDSingleClause(HeadNode*,int);
 HeadNode* Duplication(HeadNode*);
@@ -300,24 +286,25 @@ int PureLiteralEliminationOneVar(HeadNode*,int);
 status DPLL(HeadNode *LIST,consequence *result,int VARNUM) {
     //单子句规则
     HeadNode* Pfind = LIST;
-    HeadNode* SingleClause = IsSingleClause(Pfind,result); //判断Pfind里是否存在单子句。遍历头节点，若任意一行的Num存在为1的情况，即证明存在单子句，并返回单子句的指针
+    HeadNode* SingleClause = IsSingleClause(Pfind); //判断Pfind里是否存在单子句。遍历头节点，若任意一行的Num存在为1的情况，即证明存在单子句，并返回单子句的指针
     while (SingleClause != nullptr) {
         SingleClause->right->data > 0 ? result[abs(SingleClause->right->data)-1].value = TRUE : result[abs(SingleClause->right->data)-1].value = FALSE;
         int temp = SingleClause->right->data;
         DeleteHeadNode(SingleClause,LIST);//删除单子句这一行
         DeleteDataNode(temp,LIST);//删除相等或相反数的节点
         if(!LIST) return TRUE; //List为空，所以满足
-        else if(IsEmptyClause(LIST)) return FALSE; //存在空子句，所以不满足
+        else if(IsEmptyClause(LIST)) {return FALSE;}; //存在空子句，所以不满足
         Pfind = LIST;
-        SingleClause = IsSingleClause(Pfind,result);;//回到头节点继续进行检测是否有单子句
+        SingleClause = IsSingleClause(Pfind);;//回到头节点继续进行检测是否有单子句
     }
     //分裂策略
     int Var =Jeroslaw_Wang_choose(LIST,VARNUM);//选取变元
     HeadNode* replica = Duplication(LIST);//存放LIST的副本replica
     HeadNode *temp1 = ADDSingleClause(LIST,Var);//装载变元成为单子句，并将此单子句放在首位
-    if(DPLL(temp1,result,VARNUM)) return TRUE;
+    if(DPLL(temp1,result,VARNUM)) {delete replica;return TRUE;}
     else {
         HeadNode *temp2 = ADDSingleClause(replica,-Var);
+        // replica=NULL;
         return DPLL(temp2,result,VARNUM);
     }
 }
@@ -332,9 +319,9 @@ status IsEmptyClause(HeadNode* LIST) {
     return FALSE; //没有空子句
 }
 
-HeadNode* IsSingleClause(HeadNode* Pfind,consequence* result) {
+HeadNode* IsSingleClause(HeadNode* Pfind) {
     while (Pfind != nullptr ) {
-        if((Pfind->Num == 1)&&(!result[Pfind->right->data].puretag))
+        if((Pfind->Num == 1))
             return Pfind;
         Pfind = Pfind->down;
     }
@@ -491,9 +478,9 @@ void show(struct consequence *result,int VarNum) {
     cout<<endl;
 }
 
-// int main() {
+// void main_run(string fname){
 //     int VARNUM;
-//     string filename = R"(G:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-1.cnf)";
+//     string filename = fname;//R"(G:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-1.cnf)";
 //     HeadNode* LIST = CreateClause(VARNUM,filename);
 //     consequence result[VARNUM];//记录最终的真假值
 //     clock_t StartTime,EndTime; //记录程序运行的时间
@@ -507,49 +494,17 @@ void show(struct consequence *result,int VarNum) {
 //         cout<<"S "<<NoAnwser<<endl;
 //     show(result,VARNUM);//输出解
 //     cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+
 // }
-
-// int maint(){
-
-//     string foldername=R"(test\sat)";
+// int main() {
+//     string foldername=R"(sat)";
 //     int VARNUM;
 //     string project_path=getCwd();
 //     string data_folder_name=foldername;//R"(test\sat)";
 //     string file_name=project_path+"\\"+data_folder_name;
 //     vector<char*> allPath=getFilesList(file_name.c_str());
 //     for (vector<char*>::iterator iter = allPath.begin(); iter != allPath.end(); iter++){   
-//         string file_name=*iter;
-//         cout << file_name<<" is working"<< endl;
-//         HeadNode* LIST = CreateClause(VARNUM,file_name);
-//         consequence result[VARNUM];//记录最终的真假值
-//         clock_t StartTime,EndTime;
-//         cout<<"Result: \n";
-//         StartTime = clock();
-
-//         // struct DPLL_p *input_parameters;
-//         // input_parameters->l=LIST;
-//         // input_parameters->r=result;
-//         // input_parameters->v=VARNUM;
-//         // HANDLE hThread3 = CreateThread(NULL,0,DPLLStuf,input_parameters,0,NULL);     
-//         // // // HANDLE hThread4= CreateThread(NULL,0,Timer,NULL,0,NULL);
-//         // if(WaitForSingleObject(hThread3,2*1000)==WAIT_OBJECT_0) {}
-//         // else continue;
-//         // CloseHandle(hThread3);
-
-
-//         // if(WaitForSingleObject(hThread4, 20*1000)==WAIT_TIMEOUT){
-//         //     if(WaitForSingleObject(hThread3, INFINITE)!=WAIT_OBJECT_0)
-//         //         CloseHandle(hThread3);
-//         //         CloseHandle(hThread4);
-//         // }
-//         int value = DPLL(LIST,result,VARNUM);
-//         EndTime = clock();
-//         if(value)
-//             cout<<"S "<<TRUE<<endl;
-//         else
-//             cout<<"S "<<NoAnwser<<endl;
-//         show(result,VARNUM);//输出解
-//         cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+//        main_run(*iter);
 //     }
 //     return 0;
 // }

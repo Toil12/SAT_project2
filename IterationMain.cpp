@@ -10,6 +10,52 @@
 
 using namespace std;
 
+// void BenchmarkRun(){
+//     int VARNUM;
+//     string filename = R"(G:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-1.cnf)";;
+//     HeadNode* LIST = CreateClause(VARNUM,filename);
+//     consequence result[VARNUM];//记录最终的真假值
+//     clock_t StartTime,EndTime; //记录程序运行的时间
+//     cout<<"Result: \n";
+//     StartTime = clock();
+//     int value = DPLL(LIST,result,VARNUM);
+//     EndTime = clock();
+//     if(value)
+//         cout<<"S "<<TRUE<<endl;
+//     else
+//         cout<<"S "<<NoAnwser<<endl;
+//     show(result,VARNUM);//输出解
+//     cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+
+
+//     filename = R"(G:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-2.cnf)";;
+//     LIST = CreateClause(VARNUM,filename);
+//     consequence result2[VARNUM];//记录最终的真假值
+//     cout<<"Result: \n";
+//     StartTime = clock();
+//     int value2 = DPLL(LIST,result2,VARNUM);
+//     EndTime = clock();
+//     if(value2)
+//         cout<<"S "<<TRUE<<endl;
+//     else
+//         cout<<"S "<<NoAnwser<<endl;
+//     show(result2,VARNUM);//输出解
+//     cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+
+//     filename = R"(G:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-3.cnf)";;
+//     LIST = CreateClause(VARNUM,filename);
+//     consequence result3[VARNUM];//记录最终的真假值
+//     cout<<"Result: \n";
+//     StartTime = clock();
+//     int value3 = DPLL(LIST,result3,VARNUM);
+//     EndTime = clock();
+//     if(value3)
+//         cout<<"S "<<TRUE<<endl;
+//     else
+//         cout<<"S "<<NoAnwser<<endl;
+//     show(result3,VARNUM);//输出解
+//     cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+// }
 
 struct DPLL_p{
     HeadNode *l{};
@@ -37,6 +83,7 @@ DWORD WINAPI DPLLStuf(LPVOID lpParameter){
 
 DWORD WINAPI DoStuff2(LPVOID lpParameter)
 {   
+    int pass_number=0;
     char* tempname = (char*)lpParameter;
     string foldername=tempname;
     int VARNUM;
@@ -53,23 +100,6 @@ DWORD WINAPI DoStuff2(LPVOID lpParameter)
         clock_t StartTime,EndTime;
         cout<<"Result: \n";
         StartTime = clock();
-
-        // struct DPLL_p *input_parameters;
-        // input_parameters->l=LIST;
-        // input_parameters->r=result;
-        // input_parameters->v=VARNUM;
-        // HANDLE hThread3 = CreateThread(NULL,0,DPLLStuf,input_parameters,0,NULL);     
-        // // // HANDLE hThread4= CreateThread(NULL,0,Timer,NULL,0,NULL);
-        // if(WaitForSingleObject(hThread3,2*1000)==WAIT_OBJECT_0) {}
-        // else continue;
-        // CloseHandle(hThread3);
-
-
-        // if(WaitForSingleObject(hThread4, 20*1000)==WAIT_TIMEOUT){
-        //     if(WaitForSingleObject(hThread3, INFINITE)!=WAIT_OBJECT_0)
-        //         CloseHandle(hThread3);
-        //         CloseHandle(hThread4);
-        // }
         int value = DPLL(LIST,result,VARNUM);
         EndTime = clock();
         if(value)
@@ -78,14 +108,15 @@ DWORD WINAPI DoStuff2(LPVOID lpParameter)
             cout<<"S "<<NoAnwser<<endl;
         show(result,VARNUM);//输出解
         cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
-
+        pass_number=1+pass_number;
         delete LIST;
         // delete result;
     }
+    cout<<"pass numbers:"<<pass_number<<endl;
     return 0;
 }
 
-int BenchmarkRun(char *foldername) {  
+int BenchmarkRun(char *foldername,int minute) {  
 
     HANDLE hThread2 = CreateThread(
         NULL,    // Thread attributes
@@ -95,7 +126,7 @@ int BenchmarkRun(char *foldername) {
         0,       // Creation flags
         NULL);   // Thread id
 
-    if(WaitForSingleObject(hThread2,20*1000)==WAIT_TIMEOUT) CloseHandle(hThread2);;
+    if(WaitForSingleObject(hThread2,minute*1000)==WAIT_TIMEOUT) CloseHandle(hThread2);;
 
 
     return 0;
