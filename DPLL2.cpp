@@ -4,7 +4,6 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-// #include "FileOperations.cpp"
 using namespace std;
 
 typedef struct DataNode {
@@ -200,9 +199,10 @@ int Boehm_choose (HeadNode* LIST,int VARNUM, int Alpha=1, int Belta=2) {
 }
 
 
-HeadNode* CreateClause(int &VARNUM,string path) {
+HeadNode* CreateClause(int &VARNUM,string name) {
     //FileOpen
-    string HFilePath = path;
+    string HFilePath =name;
+    string path = HFilePath;
     ifstream fis(path);
     if(!fis){
         cout<<"File can not open.";
@@ -268,7 +268,7 @@ HeadNode* CreateClause(int &VARNUM,string path) {
     }
      */
     VARNUM = VarNum;
-    cout<<"clause creation finish"<<endl;
+    cout<<"finish"<<endl;
     return HEAD;
 }
 
@@ -282,25 +282,22 @@ HeadNode* CreateClause(int &VARNUM,string path) {
 typedef int status;
 struct consequence {
     int value = -1;//存真值 真时为true-1，假时为false-0
-    bool puretag=false;//when true,mean this is pure literal
 };
 
 
 status DPLL(HeadNode *LIST,consequence *result,int);
-HeadNode* IsSingleClause(HeadNode*,consequence*);
+HeadNode* IsSingleClause(HeadNode*);
 status IsEmptyClause(HeadNode*);
 HeadNode* ADDSingleClause(HeadNode*,int);
 HeadNode* Duplication(HeadNode*);
-HeadNode* PureLiteralElimination(HeadNode*, int,consequence*);
 void DeleteHeadNode(HeadNode*,HeadNode*&);
 void DeleteDataNode(int,HeadNode*&);
 void show(struct consequence *,int);
-int PureLiteralEliminationOneVar(HeadNode*,int);
 
 status DPLL(HeadNode *LIST,consequence *result,int VARNUM) {
     //单子句规则
     HeadNode* Pfind = LIST;
-    HeadNode* SingleClause = IsSingleClause(Pfind,result); //判断Pfind里是否存在单子句。遍历头节点，若任意一行的Num存在为1的情况，即证明存在单子句，并返回单子句的指针
+    HeadNode* SingleClause = IsSingleClause(Pfind); //判断Pfind里是否存在单子句。遍历头节点，若任意一行的Num存在为1的情况，即证明存在单子句，并返回单子句的指针
     while (SingleClause != nullptr) {
         SingleClause->right->data > 0 ? result[abs(SingleClause->right->data)-1].value = TRUE : result[abs(SingleClause->right->data)-1].value = FALSE;
         int temp = SingleClause->right->data;
@@ -309,7 +306,7 @@ status DPLL(HeadNode *LIST,consequence *result,int VARNUM) {
         if(!LIST) return TRUE; //List为空，所以满足
         else if(IsEmptyClause(LIST)) return FALSE; //存在空子句，所以不满足
         Pfind = LIST;
-        SingleClause = IsSingleClause(Pfind,result);;//回到头节点继续进行检测是否有单子句
+        SingleClause = IsSingleClause(Pfind);;//回到头节点继续进行检测是否有单子句
     }
     //分裂策略
     int Var =Jeroslaw_Wang_choose(LIST,VARNUM);//选取变元
@@ -332,14 +329,15 @@ status IsEmptyClause(HeadNode* LIST) {
     return FALSE; //没有空子句
 }
 
-HeadNode* IsSingleClause(HeadNode* Pfind,consequence* result) {
+HeadNode* IsSingleClause(HeadNode* Pfind) {
     while (Pfind != nullptr ) {
-        if((Pfind->Num == 1)&&(!result[Pfind->right->data].puretag))
+        if(Pfind->Num == 1)
             return Pfind;
         Pfind = Pfind->down;
     }
     return nullptr;
 }
+
 HeadNode* Duplication(HeadNode* LIST) { //此处检验传参正常，开始检查复制有无逻辑错误
     HeadNode* SrcHead = LIST;
 
@@ -424,60 +422,6 @@ void DeleteHeadNode(HeadNode *Clause,HeadNode *&LIST) {
     }
 }
 
-int PureLiteralEliminationOneVar(HeadNode* LIST,int checkVar){
-    bool find_tag=false;
-    bool ptag=true;
-    //check from head
-    for(HeadNode* pHeadNode=LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down){
-        //if unit clause, break
-        if (pHeadNode->Num==1){
-            if((abs(pHeadNode->right->data)==checkVar)&&(!find_tag)) {checkVar=pHeadNode->right->data;continue;}
-            else{
-                if((abs(pHeadNode->right->data)==checkVar)&&(find_tag)&&(pHeadNode->right->data!=checkVar)) break;
-                else continue;
-            }
-        }    
-        else{
-            //in normal clause
-            for(DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next){
-                if(abs(rear->data)==checkVar){
-                    //first touch,assignment
-                     if(!find_tag){find_tag=true;checkVar=rear->data;continue;}
-                    //not first touch and with different sign, not pure literal
-                     else if (rear->data!=checkVar){ptag=false;break;}    
-                    }
-                else continue;                  
-                }
-            } 
-        if(ptag) continue;
-        else break;             
-        }
-    return ptag,checkVar;
-}
-
-HeadNode* PureLiteralElimination(HeadNode* LIST, int Varnumber,consequence *result){
-   for(int i=1;i<=Varnumber;i++){
-       int temp=i;
-       bool pure_tag=false;
-       pure_tag,temp =PureLiteralEliminationOneVar(LIST,temp);
-       if(!pure_tag) continue;
-       else{
-            for (HeadNode* pHeadNode = LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down)
-                for (DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next) {      
-                    for (DataNode* front = pHeadNode->right; front != nullptr; front= front->next)
-                        if(front->next == rear) {
-                            front->next = rear->next;
-                            pHeadNode->Num--;
-                        }
-                    }
-            }
-        temp > 0 ? result[abs(temp)-1].value = TRUE : result[abs(temp)-1].value = FALSE;
-        result[abs(temp)-1].puretag=true;
-    }
-    return LIST;
-}
-
-
 void show(struct consequence *result,int VarNum) {
     cout<<"V ";
     for(int i = 0; i < VarNum; i++) {
@@ -491,65 +435,20 @@ void show(struct consequence *result,int VarNum) {
     cout<<endl;
 }
 
-// int main() {
-//     int VARNUM;
-//     string filename = R"(G:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-1.cnf)";
-//     HeadNode* LIST = CreateClause(VARNUM,filename);
-//     consequence result[VARNUM];//记录最终的真假值
-//     clock_t StartTime,EndTime; //记录程序运行的时间
-//     cout<<"Result: \n";
-//     StartTime = clock();
-//     int value = DPLL(LIST,result,VARNUM);
-//     EndTime = clock();
-//     if(value)
-//         cout<<"S "<<TRUE<<endl;
-//     else
-//         cout<<"S "<<NoAnwser<<endl;
-//     show(result,VARNUM);//输出解
-//     cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
-// }
-
-// int maint(){
-
-//     string foldername=R"(test\sat)";
-//     int VARNUM;
-//     string project_path=getCwd();
-//     string data_folder_name=foldername;//R"(test\sat)";
-//     string file_name=project_path+"\\"+data_folder_name;
-//     vector<char*> allPath=getFilesList(file_name.c_str());
-//     for (vector<char*>::iterator iter = allPath.begin(); iter != allPath.end(); iter++){   
-//         string file_name=*iter;
-//         cout << file_name<<" is working"<< endl;
-//         HeadNode* LIST = CreateClause(VARNUM,file_name);
-//         consequence result[VARNUM];//记录最终的真假值
-//         clock_t StartTime,EndTime;
-//         cout<<"Result: \n";
-//         StartTime = clock();
-
-//         // struct DPLL_p *input_parameters;
-//         // input_parameters->l=LIST;
-//         // input_parameters->r=result;
-//         // input_parameters->v=VARNUM;
-//         // HANDLE hThread3 = CreateThread(NULL,0,DPLLStuf,input_parameters,0,NULL);     
-//         // // // HANDLE hThread4= CreateThread(NULL,0,Timer,NULL,0,NULL);
-//         // if(WaitForSingleObject(hThread3,2*1000)==WAIT_OBJECT_0) {}
-//         // else continue;
-//         // CloseHandle(hThread3);
-
-
-//         // if(WaitForSingleObject(hThread4, 20*1000)==WAIT_TIMEOUT){
-//         //     if(WaitForSingleObject(hThread3, INFINITE)!=WAIT_OBJECT_0)
-//         //         CloseHandle(hThread3);
-//         //         CloseHandle(hThread4);
-//         // }
-//         int value = DPLL(LIST,result,VARNUM);
-//         EndTime = clock();
-//         if(value)
-//             cout<<"S "<<TRUE<<endl;
-//         else
-//             cout<<"S "<<NoAnwser<<endl;
-//         show(result,VARNUM);//输出解
-//         cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
-//     }
-//     return 0;
-// }
+int main() {
+    int VARNUM;
+    string filename = R"(g:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-3.cnf)";;
+    HeadNode* LIST = CreateClause(VARNUM,filename);
+    consequence result[VARNUM];//记录最终的真假值
+    clock_t StartTime,EndTime; //记录程序运行的时间
+    cout<<"Result: \n";
+    StartTime = clock();
+    int value = DPLL(LIST,result,VARNUM);
+    EndTime = clock();
+    if(value)
+        cout<<"S "<<TRUE<<endl;
+    else
+        cout<<"S "<<NoAnwser<<endl;
+    show(result,VARNUM);//输出解
+    cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+}

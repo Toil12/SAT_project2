@@ -63,7 +63,7 @@ vector<char*> getFilesList(const char * dir)
 	return allPath;
 }
 
-void runTest(string folder_name)
+void run(string folder_name)
 {
     string project_path=getCwd();
     string data_folder_name=folder_name;
