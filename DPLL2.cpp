@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include <Windows.h>
+#include <windows.h>
 #include "FileOperations.cpp"
 using namespace std;
 
@@ -201,9 +201,9 @@ int Boehm_choose (HeadNode* LIST,int VARNUM, int Alpha=1, int Belta=2) {
 }
 
 
-HeadNode* CreateClause(int &VARNUM,string name) {
+HeadNode* CreateClause(int &VARNUM,string filename) {
     //FileOpen
-    string HFilePath =name;
+    string HFilePath = filename;
     string path = HFilePath;
     ifstream fis(path);
     if(!fis){
@@ -211,7 +211,7 @@ HeadNode* CreateClause(int &VARNUM,string name) {
         exit(1);
     }
     char ch;
-    char buf[500];
+    char buf[100];
     fis>>ch;
     while (ch != 'p') {
         fis.getline(buf,500);
@@ -270,7 +270,6 @@ HeadNode* CreateClause(int &VARNUM,string name) {
     }
      */
     VARNUM = VarNum;
-    cout<<"finish"<<endl;
     return HEAD;
 }
 
@@ -283,8 +282,7 @@ HeadNode* CreateClause(int &VARNUM,string name) {
 #define NoAnwser -1
 typedef int status;
 struct consequence {
-    int value = -1;//the value of variable
-    bool puretag=false;//when true,mean this is pure literal
+    int value = -1;//存真值 真时为true-1，假时为false-0
 };
 
 
@@ -293,13 +291,9 @@ HeadNode* IsSingleClause(HeadNode*);
 status IsEmptyClause(HeadNode*);
 HeadNode* ADDSingleClause(HeadNode*,int);
 HeadNode* Duplication(HeadNode*);
-
-HeadNode* PureLiteralElimination(HeadNode*, int,consequence*);
 void DeleteHeadNode(HeadNode*,HeadNode*&);
 void DeleteDataNode(int,HeadNode*&);
 void show(struct consequence *,int);
-int PureLiteralEliminationOneVar(HeadNode*,int);
-
 
 status DPLL(HeadNode *LIST,consequence *result,int VARNUM) {
     //单子句规则
@@ -338,7 +332,7 @@ status IsEmptyClause(HeadNode* LIST) {
 
 HeadNode* IsSingleClause(HeadNode* Pfind) {
     while (Pfind != nullptr ) {
-        if((Pfind->Num == 1))
+        if(Pfind->Num == 1)
             return Pfind;
         Pfind = Pfind->down;
     }
@@ -429,6 +423,7 @@ void DeleteHeadNode(HeadNode *Clause,HeadNode *&LIST) {
     }
 }
 
+
 int PureLiteralEliminationOneVar(HeadNode* LIST,int checkVar){
     bool find_tag=false;
     bool ptag=true;
@@ -477,7 +472,7 @@ HeadNode* PureLiteralElimination(HeadNode* LIST, int Varnumber,consequence *resu
                     }
             }
         temp > 0 ? result[abs(temp)-1].value = TRUE : result[abs(temp)-1].value = FALSE;
-        result[abs(temp)-1].puretag=true;
+        // result[abs(temp)-1].puretag=true;
     }
     return LIST;
 }
@@ -496,104 +491,93 @@ void show(struct consequence *result,int VarNum) {
     cout<<endl;
 }
 
-int main() {
-    string foldername=R"(sat)";
+void main_run(string fname){
     int VARNUM;
-    string project_path=getCwd();
-    string data_folder_name=foldername;//R"(test\sat)";
-    string file_name=project_path+"\\"+data_folder_name;
-    vector<char*> allPath=getFilesList(file_name.c_str());
-    for (vector<char*>::iterator iter = allPath.begin(); iter != allPath.end(); iter++){   
-        int VARNUM;
-        string filename =*iter;;
-        HeadNode* LIST = CreateClause(VARNUM,filename);
-        consequence result[VARNUM];//记录最终的真假值
-        clock_t StartTime,EndTime; //记录程序运行的时间
-        cout<<"Result: \n";
-        StartTime = clock();
-        int value = DPLL(LIST,result,VARNUM);
-        EndTime = clock();
-        if(value)
-            cout<<"S "<<TRUE<<endl;
-        else
-            cout<<"S "<<NoAnwser<<endl;
-        show(result,VARNUM);//输出解
-        cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
-    }
-   
+    string filename = fname;//R"(G:\Workplace\c_documents\SAT_project2\sat\aim-100-1_6-yes1-1.cnf)";
+    HeadNode* LIST = CreateClause(VARNUM,filename);
+    consequence result[VARNUM];//记录最终的真假值
+    clock_t StartTime,EndTime; //记录程序运行的时间
+    cout<<"Result: \n";
+    StartTime = clock();
+    int value = DPLL(LIST,result,VARNUM);
+    EndTime = clock();
+    if(value)
+        cout<<"S "<<TRUE<<endl;
+    else
+        cout<<"S "<<NoAnwser<<endl;
+    show(result,VARNUM);//输出解
+    cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
+
 }
-
-// struct DPLL_p{
-//     HeadNode *l{};
-//     consequence *r;
-//     int v;  
-//     int ret_value=-1;
-// }DPLL_p;
-
-// DWORD WINAPI Timer(LPVOID lpParameter)
-// {
-  
-//     while (true)
-//     {
-//         continue;
-//     }   
-// }
-
-// DWORD WINAPI DPLLStuf(LPVOID lpParameter){
-//     struct DPLL_p *p=(struct DPLL_p*)lpParameter;
-//     cout<<p->l<<p->r<<p->v<<endl;
-//     p->ret_value=DPLL(p->l,p->r,p->v);
-//     cout<<p->ret_value<<endl;
-//     return 0;
-// }
-
-// DWORD WINAPI DoStuff2(LPVOID lpParameter)
-// {   
-//     char* tempname = (char*)lpParameter;
-//     string foldername=tempname;
+// int main() {
+//     string foldername=R"(sat)";
 //     int VARNUM;
 //     string project_path=getCwd();
 //     string data_folder_name=foldername;//R"(test\sat)";
 //     string file_name=project_path+"\\"+data_folder_name;
 //     vector<char*> allPath=getFilesList(file_name.c_str());
-//     for (vector<char*>::iterator iter = allPath.begin(); iter != allPath.end(); iter++){   
-//         string file_name=*iter;
-//         cout << file_name<<" is working"<< endl;
-//         HeadNode* LIST = CreateClause(VARNUM,file_name);
-//         consequence result[VARNUM];//记录最终的真假值
-//         LIST=PureLiteralElimination(LIST,VARNUM,result);
-//         clock_t StartTime,EndTime;
-//         cout<<"Result: \n";
-//         StartTime = clock();
-
-//         int value = DPLL(LIST,result,VARNUM);
-//         EndTime = clock();
-//         if(value)
-//             cout<<"S "<<TRUE<<endl;
-//         else
-//             cout<<"S "<<NoAnwser<<endl;
-//         show(result,VARNUM);//输出解
-//         cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
-
-//         delete LIST;
-//         // delete result;
+//     for (vector<char*>::iterator iter = allPath.begin(); iter != allPath.end(); iter++){  
+//          cout << *iter<<" is working"<< endl;
+//          main_run(*iter);
 //     }
 //     return 0;
 // }
 
+struct DPLL_p{
+    HeadNode *l{};
+    consequence *r;
+    int v;  
+    int ret_value=-1;
+}DPLL_p;
 
-// int main() {  
-//     char* foldername = (char*)R"(sat)";
-//     HANDLE hThread2 = CreateThread(
-//         NULL,    // Thread attributes
-//         0,       // Stack size (0 = use default)
-//         DoStuff2, // Thread start address
-//         foldername,    // Parameter to pass to the thread
-//         0,       // Creation flags
-//         NULL);   // Thread id
+DWORD WINAPI Timer(LPVOID lpParameter)
+{
+  
+    while (true)
+    {
+        continue;
+    }   
+}
 
-//     if(WaitForSingleObject(hThread2,60*1000)==WAIT_TIMEOUT) CloseHandle(hThread2);;
+DWORD WINAPI DPLLStuf(LPVOID lpParameter){
+    struct DPLL_p *p=(struct DPLL_p*)lpParameter;
+    cout<<p->l<<p->r<<p->v<<endl;
+    p->ret_value=DPLL(p->l,p->r,p->v);
+    cout<<p->ret_value<<endl;
+    return 0;
+}
+
+DWORD WINAPI DoStuff2(LPVOID lpParameter)
+{   
+    int pass_number=0;
+    char* tempname = (char*)lpParameter;
+    string foldername=tempname;
+    int VARNUM;
+    string project_path=getCwd();
+    string data_folder_name=foldername;//R"(test\sat)";
+    string file_name=project_path+"\\"+data_folder_name;
+    vector<char*> allPath=getFilesList(file_name.c_str());
+    for (vector<char*>::iterator iter = allPath.begin(); iter != allPath.end(); iter++){  
+         cout << *iter<<" is working"<< endl;
+         main_run(*iter);
+    }
+    return 0;
+    
+}
+
+int main() {  
+    char* foldername = (char*)R"(sat)";
+    int second=20;
+    HANDLE hThread2 = CreateThread(
+        NULL,    // Thread attributes
+        0,       // Stack size (0 = use default)
+        DoStuff2, // Thread start address
+        foldername,    // Parameter to pass to the thread
+        0,       // Creation flags
+        NULL);   // Thread id
+
+    if(WaitForSingleObject(hThread2,second*1000)==WAIT_TIMEOUT) CloseHandle(hThread2);;
 
 
-//     return 0;
-// }
+    return 0;
+}

@@ -163,7 +163,7 @@ int Jeroslaw_Wang_choose_literal (HeadNode* LIST,int VARNUM) {
     }
     for(int i=0; i<VARNUM; i++){
     record[i].JW =(record[i].JW_pos)+ (record[i].JW_pos);
-  }
+    }
     //排序
     sort(record,record+VARNUM,comp_JW);//最高的在最前面
     //选取变元
@@ -443,39 +443,40 @@ int PureLiteralEliminationOneVar(HeadNode* LIST,int checkVar){
 }
 
 HeadNode* PureLiteralElimination(HeadNode* LIST, int Varnumber,consequence *result){
-   for(int i=1;i<=Varnumber;i++){
-       int temp=i;
-       bool pure_tag=false;
-       pure_tag,temp =PureLiteralEliminationOneVar(LIST,temp);
-       if(!pure_tag) continue;
-       else{
-            for (HeadNode* pHeadNode = LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down)
-                for (DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next) {      
-                    for (DataNode* front = pHeadNode->right; front != nullptr; front= front->next)
-                        if(front->next == rear) {
-                            front->next = rear->next;
-                            pHeadNode->Num--;
-                        }
-                    }
+    for(int i=1;i<=Varnumber;i++){
+        int temp=i;
+        bool pure_tag=false;
+        pure_tag,temp =PureLiteralEliminationOneVar(LIST,temp);
+        if(!pure_tag) continue;
+        else{
+            for (HeadNode* pHeadNode = LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down){
+                for (DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next) {   
+                    if (rear->data==temp) {DeleteHeadNode(pHeadNode,LIST);break;}
+                    else continue;
+                }
             }
-        temp > 0 ? result[abs(temp)-1].value = TRUE : result[abs(temp)-1].value = FALSE;
-        result[abs(temp)-1].puretag=true;
+            temp > 0 ? result[abs(temp)-1].value = TRUE : result[abs(temp)-1].value = FALSE;
+            result[abs(temp)-1].puretag=true;
+        }
     }
     return LIST;
 }
 
 
-void show(struct consequence *result,int VarNum) {
+void show(struct consequence *result,int VarNum,bool judge) {
     cout<<"V ";
-    for(int i = 0; i < VarNum; i++) {
-        if (result[i].value == TRUE)
-            cout<<i+1<<" ";
-        else if(result[i].value == FALSE)
-            cout<<-(i+1)<<" ";
-        else
-            cout<<(i+1)<<" ";//剩下一堆可true可false，就索性输出true
-    }
-    cout<<endl;
+    if(judge){
+        for(int i = 0; i < VarNum; i++) {
+            if (result[i].value == TRUE)
+                cout<<i+1<<" ";
+            else if(result[i].value == FALSE)
+                cout<<-(i+1)<<" ";
+            else
+                cout<<(i+1)<<" ";//剩下一堆可true可false，就索性输出true
+            }
+        cout<<endl;
+        }
+    else cout<<endl;  
 }
 
 // void main_run(string fname){

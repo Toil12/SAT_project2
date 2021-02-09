@@ -106,17 +106,18 @@ DWORD WINAPI DoStuff2(LPVOID lpParameter)
             cout<<"S "<<TRUE<<endl;
         else
             cout<<"S "<<NoAnwser<<endl;
-        show(result,VARNUM);//输出解
+        show(result,VARNUM,value);//输出解
         cout<<"T "<<(double)(EndTime-StartTime)/CLOCKS_PER_SEC*1000.0<<" ms\n";
         pass_number=1+pass_number;
         delete LIST;
+        cout<<"pass numbers:"<<pass_number<<endl;
         // delete result;
     }
-    cout<<"pass numbers:"<<pass_number<<endl;
+    
     return 0;
 }
 
-int BenchmarkRun(char *foldername,int minute) {  
+int BenchmarkRun(char *foldername,int sec) {  
 
     HANDLE hThread2 = CreateThread(
         NULL,    // Thread attributes
@@ -126,7 +127,7 @@ int BenchmarkRun(char *foldername,int minute) {
         0,       // Creation flags
         NULL);   // Thread id
 
-    if(WaitForSingleObject(hThread2,minute*1000)==WAIT_TIMEOUT) CloseHandle(hThread2);;
+    if(WaitForSingleObject(hThread2,sec)==WAIT_TIMEOUT) CloseHandle(hThread2);;
 
 
     return 0;
