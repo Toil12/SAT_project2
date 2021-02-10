@@ -416,29 +416,19 @@ int PureLiteralEliminationOneVar(HeadNode* LIST,int checkVar){
     bool ptag=true;
     //check from head
     for(HeadNode* pHeadNode=LIST; pHeadNode != nullptr ; pHeadNode = pHeadNode->down){
-        //if unit clause, break
-        if (pHeadNode->Num==1){
-            if((abs(pHeadNode->right->data)==checkVar)&&(!find_tag)) {checkVar=pHeadNode->right->data;continue;}
-            else{
-                if((abs(pHeadNode->right->data)==checkVar)&&(find_tag)&&(pHeadNode->right->data!=checkVar)) break;
-                else continue;
-            }
-        }    
-        else{
-            //in normal clause
-            for(DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next){
-                if(abs(rear->data)==checkVar){
-                    //first touch,assignment
-                     if(!find_tag){find_tag=true;checkVar=rear->data;continue;}
-                    //not first touch and with different sign, not pure literal
-                     else if (rear->data!=checkVar){ptag=false;break;}    
-                    }
-                else continue;                  
+    //in normal clause
+        for(DataNode *rear = pHeadNode->right; rear != nullptr ; rear = rear->next){
+            if(abs(rear->data)==checkVar){
+                //first touch,assignment
+                if(!find_tag){find_tag=true;checkVar=rear->data;continue;}
+                //not first touch and with different sign, not pure literal
+                else if (rear->data!=checkVar){ptag=false;break;}    
                 }
-            } 
+            else continue;                  
+        }
         if(ptag) continue;
         else break;             
-        }
+    }
     return ptag,checkVar;
 }
 
